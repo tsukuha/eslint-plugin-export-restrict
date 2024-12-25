@@ -1,0 +1,25 @@
+name: CI Test
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Ci Tests
+    runs-on: ubuntu-latest
+    steps:
+      name: Checkout Repository
+        uses: actions/checkout@4
+          with: ${{ github.event.pull_request_head.sha }}
+      name: Linter Check
+      run: |
+        echo `pwd`
+        npm i
+        npm run lint
+      name: ESLint Tests
+      run: |
+        npm run test
+        npm run test:flat
+        npm run test:esm
