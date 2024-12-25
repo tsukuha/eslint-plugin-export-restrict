@@ -7,7 +7,7 @@ module.exports = [
       'export-restrict': exportRestrictPlugin,
     },
     rules: {
-      'export-restrict/no-export-private-declares': ['error'],
+      'export-restrict/no-export-private-declare': ['error'],
     },
   },
 ];

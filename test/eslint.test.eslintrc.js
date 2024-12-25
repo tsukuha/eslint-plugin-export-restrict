@@ -6,7 +6,7 @@ module.exports = [
   {
     files: ['**/*.js', '**/*.ts'],
     rules: {
-      "export-restrict/no-export-private-declares": ["error"],
+      "export-restrict/no-export-private-declare": ["error"],
     },
   },
 ];
