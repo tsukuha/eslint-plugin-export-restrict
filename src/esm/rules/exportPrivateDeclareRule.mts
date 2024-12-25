@@ -54,10 +54,45 @@ const exportRestrictRule: Rule.RuleModule = {
     const restrictedExportsInfo: {
       parentBegin: number;
       parentEnd: number;
-      name: string;
+      names: string[];
       type: string;
     }[] = [];
     return {
+      VariableDeclaration(declaration) {
+        const parentDeclaration = declaration.parent;
+        if (
+          parentDeclaration.parent !== null ||
+          parentDeclaration.type !== "Program" ||
+          !parentDeclaration.comments?.length
+        ) {
+          return;
+        }
+        const hasPrivateAnnotatedComment = parentDeclaration.comments.some(
+          (s) =>
+            s.value.includes("@private") &&
+            s.range?.[1] !== undefined &&
+            s.range?.[1] === (declaration.range?.[0] || 0) - 1,
+        );
+
+        const identifiers = declaration.declarations
+          .map((s) => (s.id && s.type === "VariableDeclarator" ? s.id : undefined))
+          .filter((s): s is ESTree.Identifier => s !== undefined);
+
+        // TODO: consider to pattern without Identifier
+        if (!hasPrivateAnnotatedComment || parentDeclaration.range === undefined || identifiers.length === 0) {
+          return;
+        }
+        if (parentDeclaration.range?.[0] === undefined || parentDeclaration.range?.[1] === undefined) {
+          return;
+        }
+
+        restrictedExportsInfo.push({
+          parentBegin: parentDeclaration.range[0],
+          parentEnd: parentDeclaration.range[1],
+          names: identifiers.map((s) => s.name),
+          type: "variables",
+        });
+      },
       ClassDeclaration(declaration) {
         const parentDeclaration = declaration.parent;
         if (
@@ -84,7 +119,7 @@ const exportRestrictRule: Rule.RuleModule = {
         restrictedExportsInfo.push({
           parentBegin: parentDeclaration.range[0],
           parentEnd: parentDeclaration.range[1],
-          name: declaration.id.name,
+          names: [declaration.id.name],
           type: "class",
         });
       },
@@ -114,7 +149,7 @@ const exportRestrictRule: Rule.RuleModule = {
         restrictedExportsInfo.push({
           parentBegin: parentDeclaration.range[0],
           parentEnd: parentDeclaration.range[1],
-          name: declaration.id.name,
+          names: [declaration.id.name],
           type: "function",
         });
       },
@@ -132,19 +167,20 @@ const exportRestrictRule: Rule.RuleModule = {
           if (!declaration?.loc) {
             return;
           }
+
           const privateAnnotatedComment = parentNode.comments.find(
             (s) =>
               s.loc?.end.line !== undefined &&
               s.loc.end.line === (declaration.loc?.start.line || 0) - 1 &&
               s.value.includes("@private"),
           );
-
           if (privateAnnotatedComment === undefined || node.range === undefined) {
             return;
           }
           if (parentNode.range?.[0] === undefined || parentNode.range?.[1] === undefined) {
             return;
           }
+
           if (declaration.type === "FunctionDeclaration") {
             context.report({
               loc: declaration.loc,
@@ -198,20 +234,33 @@ const exportRestrictRule: Rule.RuleModule = {
         const findIdentifiers = mappedIdentifiers.filter((s) =>
           restrictedExportsInfo.some(
             (t) =>
-              t.name === s.name && t.parentBegin === parentNode.range?.[0] && t.parentEnd === parentNode.range?.[1],
+              t.names.includes(s.name) &&
+              t.parentBegin === parentNode.range?.[0] &&
+              t.parentEnd === parentNode.range?.[1],
           ),
         );
-        const findName = findIdentifiers.map((t) => t.name);
-        const findTypes = restrictedExportsInfo.filter((s) => findName.includes(s.name)).map((s) => s.type);
+        const sortedFindData = findIdentifiers
+          .map((s) => {
+            const find = restrictedExportsInfo.find((t) => t.names.includes(s.name));
+            if (find !== undefined) {
+              return find;
+            }
+          })
+          .map((s) => ({ type: s?.type, names: s?.names }));
+
         findIdentifiers.forEach((identifier, index) => {
-          if (identifier?.loc == null || findTypes[index] === undefined) {
+          const names = sortedFindData[index]?.names;
+          const type = sortedFindData[index]?.type;
+          if (identifier?.loc == null || names === undefined || type === undefined) {
             return;
           }
           context.report({
             loc: identifier.loc,
-            message: `private ${findTypes[index]} ${identifier.name} cannot export`,
+            message: `private ${sortedFindData[index]?.type} ${
+              names.length === 1 ? names.map((name) => name).toString() + " " : ""
+            }cannot export`,
             fix: (fixer) =>
-              exportRestrictFixer<(typeof findTypes)[0]>(fixer, node, {
+              exportRestrictFixer<typeof type>(fixer, node, {
                 identifier,
               }),
           });
