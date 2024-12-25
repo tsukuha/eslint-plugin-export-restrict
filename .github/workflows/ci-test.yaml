@@ -21,6 +21,7 @@ jobs:
           pnpm lint
       - name: ESLint Tests
         run: |
+          pnpm build
           pnpm test
           pnpm test:flat
           pnpm test:esm
