@@ -71,8 +71,7 @@ const exportRestrictRule: Rule.RuleModule = {
           (s) =>
             s.value.includes("@private") &&
             s.range?.[1] !== undefined &&
-            // @ts-expect-error
-            s.range?.[1] === (declaration.start || 0) - 1,
+            s.range?.[1] === (declaration.range?.[0] || 0) - 1,
         );
 
         if (!hasPrivateAnnotatedComment || parentDeclaration.range === undefined || declaration.id.name === undefined) {
@@ -102,8 +101,7 @@ const exportRestrictRule: Rule.RuleModule = {
           (s) =>
             s.value.includes("@private") &&
             s.range?.[1] !== undefined &&
-            // @ts-expect-error
-            s.range?.[1] === (declaration.start || 0) - 1,
+            s.range?.[1] === (declaration.range?.[0] || 0) - 1,
         );
 
         if (!hasPrivateAnnotatedComment || parentDeclaration.range === undefined || declaration.id.name === undefined) {
