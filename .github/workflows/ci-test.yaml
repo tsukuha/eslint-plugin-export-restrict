@@ -17,10 +17,10 @@ jobs:
       - name: Linter Check
         run: |
           npm i -g pnpm@9.1.0
-          npm i
-          npm run lint
+          pnpm i
+          pnpm lint
       - name: ESLint Tests
         run: |
-          npm run test
-          npm run test:flat
-          npm run test:esm
+          pnpm test
+          pnpm test:flat
+          pnpm test:esm
