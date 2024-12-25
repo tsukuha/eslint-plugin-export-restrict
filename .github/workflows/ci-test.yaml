@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       name: Checkout Repository
-        uses: actions/checkout@4
+        uses: actions/checkout@v4
         with: ${{ github.event.pull_request_head.sha }}
       name: Linter Check
       run: |
