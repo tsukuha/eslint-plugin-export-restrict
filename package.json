@@ -10,8 +10,8 @@
   "description": "ESLint Plugin For Restricted Export",
   "scripts": {
     "build": "tsc",
-    "lint": "eslint -c ./eslint.config.js",
-    "lint:fix": "eslint -c ./test/eslint.config.js --fix",
+    "lint": "prettier --check ./src && eslint -c ./eslint.config.js",
+    "lint:fix": "prettier --write ./src && eslint -c ./eslint.config.js --fix",
     "test": "eslint -c ./test/eslint.test.eslintrc.js",
     "test:flat": "eslint -c ./test/eslint.test.config.js",
     "test:esm": "ESLINT_USE_FLAT_CONFIG=true eslint -c ./test/eslint.test.config.mjs"
@@ -38,6 +38,7 @@
     "dist": "link:dist",
     "eslint": "^9.17.0",
     "eslint-plugin-export-restrict": "link:",
+    "prettier": "^3.4.2",
     "typescript": "^5.7.2"
   }
 }

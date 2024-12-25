@@ -4,7 +4,7 @@ const typescriptESLintPlugin = require('@typescript-eslint/eslint-plugin')
 module.exports =  [
   {
     files: ['**/*'],
-    ignore: ["eslint.*"],
+    ignores: ["eslint.*", "dist/**/*"],
     rules: {
       semi: ['error', 'always'],
       'max-len': ['error', { code: 120 }],
@@ -13,6 +13,7 @@ module.exports =  [
   },
   {
     files: ['**/*.*ts'],
+    ignores: ["eslint.*", "dist/**/*"],
     languageOptions: {
       parser: typescriptESLintParser,
       parserOptions: {

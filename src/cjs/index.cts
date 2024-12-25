@@ -1,3 +1,5 @@
 module.exports = {
-  rules: { 'no-export-private-declares': require('./rules/exportPrivateDeclaresRule.cjs') },
+  rules: {
+    "no-export-private-declares": require("./rules/exportPrivateDeclaresRule.cjs"),
+  },
 };
