@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "outDir": "../dist",
+    "baseUrl": ".",
     "strict": true,
     "esModuleInterop": true,
     "noUncheckedIndexedAccess": true,

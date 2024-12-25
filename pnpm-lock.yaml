@@ -27,7 +27,7 @@ importers:
         specifier: ^9.17.0
         version: 9.17.0
       eslint-plugin-export-restrict:
-        specifier: link:./
+        specifier: 'link:'
         version: 'link:'
       prettier:
         specifier: ^3.4.2
