@@ -10,16 +10,17 @@ jobs:
     name: Ci Tests
     runs-on: ubuntu-latest
     steps:
-      name: Checkout Repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
-        with: ${{ github.event.pull_request_head.sha }}
-      name: Linter Check
-      run: |
-        echo `pwd`
-        npm i
-        npm run lint
-      name: ESLint Tests
-      run: |
-        npm run test
-        npm run test:flat
-        npm run test:esm
+        with:
+          ref: ${{ github.event.pull_request_head.sha }}
+      - name: Linter Check
+        run: |
+          echo `pwd`
+          npm i
+          npm run lint
+      - name: ESLint Tests
+        run: |
+          npm run test
+          npm run test:flat
+          npm run test:esm
