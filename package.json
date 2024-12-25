@@ -35,9 +35,8 @@
     "@types/node": "^22.10.2",
     "@typescript-eslint/eslint-plugin": "^8.18.2",
     "@typescript-eslint/parser": "^8.18.2",
-    "dist": "link:dist",
     "eslint": "^9.17.0",
-    "eslint-plugin-export-restrict": "link:",
+    "eslint-plugin-export-restrict": "link:./",
     "prettier": "^3.4.2",
     "typescript": "^5.7.2"
   }

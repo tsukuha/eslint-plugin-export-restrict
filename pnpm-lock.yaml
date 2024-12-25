@@ -23,14 +23,11 @@ importers:
       '@typescript-eslint/parser':
         specifier: ^8.18.2
         version: 8.18.2(eslint@9.17.0)(typescript@5.7.2)
-      dist:
-        specifier: link:dist
-        version: link:dist
       eslint:
         specifier: ^9.17.0
         version: 9.17.0
       eslint-plugin-export-restrict:
-        specifier: 'link:'
+        specifier: link:./
         version: 'link:'
       prettier:
         specifier: ^3.4.2
