@@ -134,11 +134,12 @@ const exportRestrictRule: Rule.RuleModule = {
           if (!declaration?.loc) {
             return;
           }
-          const privateAnnotatedComment = parentNode.comments.find((s) => (
-            s.loc?.end.line !== undefined &&
-            s.loc.end.line === (declaration.loc?.start.line || 0) - 1 &&
-            s.value.includes("@private")
-          ));
+          const privateAnnotatedComment = parentNode.comments.find(
+            (s) =>
+              s.loc?.end.line !== undefined &&
+              s.loc.end.line === (declaration.loc?.start.line || 0) - 1 &&
+              s.value.includes("@private"),
+          );
 
           if (privateAnnotatedComment === undefined || node.range === undefined) {
             return;
