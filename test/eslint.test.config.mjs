@@ -1,4 +1,4 @@
-import exportRestrictPlugin from 'eslint-plugin-export-restrict'
+import exportRestrictPlugin from 'eslint-plugin-export-restrict';
 
 export default [
   {
