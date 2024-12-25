@@ -16,7 +16,7 @@ jobs:
           ref: ${{ github.event.pull_request_head.sha }}
       - name: Linter Check
         run: |
-          echo `pwd`
+          npm i -g pnpm@9.1.0
           npm i
           npm run lint
       - name: ESLint Tests
