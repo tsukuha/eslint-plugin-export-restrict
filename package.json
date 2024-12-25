@@ -2,7 +2,8 @@
   "name": "eslint-plugin-export-restrict",
   "version": "0.1.1-beta",
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "packageManager": "pnpm@9.1.0",
   "main": "dist/cjs/index.cjs",
@@ -10,7 +11,7 @@
   "types": "dist/cjs/index.d.cts",
   "description": "ESLint Plugin For Restricted Export",
   "scripts": {
-    "build": "tsc -p ./src/tsconfig.build.json",
+    "build": "tsc -p ./src/tsconfig.json",
     "lint": "prettier --check ./src && eslint -c ./eslint.config.js",
     "lint:fix": "prettier --write ./src && eslint -c ./eslint.config.js --fix",
     "test": "eslint -c ./test/eslint.test.eslintrc.js",
