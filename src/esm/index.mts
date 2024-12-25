@@ -1,5 +1,5 @@
-import { exportRestrictRule } from "./rules/exportPrivateDeclaresRule.mjs";
+import { exportRestrictRule } from "./rules/exportPrivateDeclareRule.mts";
 
 export default {
-  rules: { "no-export-private-declares": exportRestrictRule },
+  rules: { "no-export-private-declare": exportRestrictRule },
 };

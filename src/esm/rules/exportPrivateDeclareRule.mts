@@ -46,7 +46,7 @@ const exportRestrictRule: Rule.RuleModule = {
     type: "problem",
     docs: {
       recommended: true,
-      description: "error on export private declares",
+      description: "error on export private declarers",
     },
     fixable: "code",
   },
@@ -218,4 +218,4 @@ const exportRestrictRule: Rule.RuleModule = {
   },
 };
 
-module.exports = exportRestrictRule;
+export { exportRestrictRule };

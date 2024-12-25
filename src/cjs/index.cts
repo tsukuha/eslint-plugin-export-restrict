@@ -1,5 +1,5 @@
 module.exports = {
   rules: {
-    "no-export-private-declares": require("./rules/exportPrivateDeclaresRule.cjs"),
+    "no-export-private-declare": require("./rules/exportPrivateDeclareRule.cjs"),
   },
 };
