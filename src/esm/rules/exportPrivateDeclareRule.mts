@@ -131,15 +131,19 @@ const exportRestrictRule: Rule.RuleModule = {
           if (parentNode?.parent != null || parentNode.type !== "Program" || !parentNode.comments?.length) {
             return;
           }
-          const privateAnnotatedComment = parentNode.comments.find((s) => s.value.includes("@private"));
+          if (!declaration?.loc) {
+            return;
+          }
+          const privateAnnotatedComment = parentNode.comments.find((s) => (
+            s.loc?.end.line !== undefined &&
+            s.loc.end.line === (declaration.loc?.start.line || 0) - 1 &&
+            s.value.includes("@private")
+          ));
 
           if (privateAnnotatedComment === undefined || node.range === undefined) {
             return;
           }
           if (parentNode.range?.[0] === undefined || parentNode.range?.[1] === undefined) {
-            return;
-          }
-          if (!declaration?.loc) {
             return;
           }
           if (declaration.type === "FunctionDeclaration") {
