@@ -1,4 +1,4 @@
-# eslint-plugin-export-restrict
+# [eslint-plugin-export-restrict](https://github.com/tsukuha/eslint-plugin-export-restrict)
 
 ## About
 This package `eslint-plugin-export-restrict` is a custom plugin using ESLint for controlling export declarations from files.
