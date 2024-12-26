@@ -57,6 +57,10 @@ const exportRestrictRule: Rule.RuleModule = {
       names: string[];
       type: string;
     }[] = [];
+    // NOTE: variables for hoisting export declarers
+    const calledDeclarationIdentifiers: (ESTree.Identifier | ESTree.Identifier[])[] = [];
+    const stillNotExportIdentifiers: ESTree.Identifier[] = [];
+
     return {
       VariableDeclaration(declaration) {
         const parentDeclaration = declaration.parent;
@@ -86,12 +90,33 @@ const exportRestrictRule: Rule.RuleModule = {
           return;
         }
 
+        const identifierNames = identifiers.map((s) => s.name);
         restrictedExportsInfo.push({
           parentBegin: parentDeclaration.range[0],
           parentEnd: parentDeclaration.range[1],
-          names: identifiers.map((s) => s.name),
+          names: identifierNames,
           type: "variables",
         });
+
+        const tmpReplacer = (a: string, b: string) => (a < b ? 1 : -1);
+        // NOTE: for hoisting export declarers
+        const alreadyExportedIdentifier = calledDeclarationIdentifiers.find(
+          (s) => Array.isArray(s) && JSON.stringify(s, tmpReplacer) === JSON.stringify(identifierNames, tmpReplacer),
+        );
+        if (alreadyExportedIdentifier !== undefined && Array.isArray(alreadyExportedIdentifier)) {
+          const foundIdentifier = stillNotExportIdentifiers.find((s) =>
+            alreadyExportedIdentifier.some((t) => t.name === s.name),
+          );
+          if (foundIdentifier?.loc == undefined || foundIdentifier?.name == undefined) {
+            return;
+          }
+          context.report({
+            loc: foundIdentifier.loc,
+            message: `private variables ${foundIdentifier?.name} cannot export`,
+          });
+        } else {
+          calledDeclarationIdentifiers.push(identifiers);
+        }
       },
       ClassDeclaration(declaration) {
         const parentDeclaration = declaration.parent;
@@ -122,6 +147,23 @@ const exportRestrictRule: Rule.RuleModule = {
           names: [declaration.id.name],
           type: "class",
         });
+
+        // NOTE: for hoisting export declarers
+        const alreadyExportedIdentifier = stillNotExportIdentifiers.find(
+          (s) => !Array.isArray(s) && s.name === declaration.id.name,
+        );
+        if (alreadyExportedIdentifier !== undefined) {
+          const foundIdentifier = stillNotExportIdentifiers.find((s) => s.name === declaration.id.name);
+          if (foundIdentifier?.loc == undefined || foundIdentifier?.name == undefined) {
+            return;
+          }
+          context.report({
+            loc: foundIdentifier.loc,
+            message: `private class ${foundIdentifier?.name} cannot export`,
+          });
+        } else {
+          calledDeclarationIdentifiers.push(declaration.id);
+        }
       },
       FunctionDeclaration(declaration) {
         const parentDeclaration = declaration.parent;
@@ -152,6 +194,23 @@ const exportRestrictRule: Rule.RuleModule = {
           names: [declaration.id.name],
           type: "function",
         });
+
+        // NOTE: for hoisting export declarers
+        const alreadyExportedIdentifier = stillNotExportIdentifiers.find(
+          (s) => !Array.isArray(s) && s.name === declaration.id.name,
+        );
+        if (alreadyExportedIdentifier !== undefined) {
+          const foundIdentifier = stillNotExportIdentifiers.find((s) => s.name === declaration.id.name);
+          if (foundIdentifier?.loc == undefined || foundIdentifier?.name === undefined) {
+            return;
+          }
+          context.report({
+            loc: foundIdentifier.loc,
+            message: `private function ${foundIdentifier?.name} cannot export`,
+          });
+        } else {
+          calledDeclarationIdentifiers.push(declaration.id);
+        }
       },
       ExportNamedDeclaration(node) {
         const parentNode = node.parent;
@@ -231,6 +290,16 @@ const exportRestrictRule: Rule.RuleModule = {
             return undefined;
           })
           .filter((s): s is ESTree.Identifier => s !== undefined);
+
+        // NOTE: for hoisting export declarers
+        const calledIdentifiersFlat = calledDeclarationIdentifiers.flat();
+        if (!mappedIdentifiers.every((s) => calledIdentifiersFlat.some((v) => v.name === s.name))) {
+          const stillNotDeclareIdentifiers = mappedIdentifiers.filter(
+            (s) => !calledIdentifiersFlat.some((t) => t.name === s.name),
+          );
+          stillNotExportIdentifiers.push(...stillNotDeclareIdentifiers);
+        }
+
         const findIdentifiers = mappedIdentifiers.filter((s) =>
           restrictedExportsInfo.some(
             (t) =>
