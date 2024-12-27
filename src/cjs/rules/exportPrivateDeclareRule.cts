@@ -1,5 +1,57 @@
 import type { Rule } from "eslint";
-import type * as ESTree from "estree";
+import * as ESTree from "estree";
+
+function extractIdentifiersFromPattern(pattern: Exclude<ESTree.Pattern, "Identifier">): ESTree.Identifier[] {
+  const identifiers: ESTree.Identifier[] = [];
+  if (pattern.type === "ArrayPattern") {
+    if (pattern.elements.length === 0) {
+      return identifiers;
+    }
+    pattern.elements.forEach((elm) => {
+      if (elm === null) {
+        return;
+      }
+      if (elm?.type === "Identifier") {
+        identifiers.push(elm);
+      } else {
+        identifiers.push(...extractIdentifiersFromPattern(elm));
+      }
+    });
+  }
+  if (pattern.type === "ObjectPattern") {
+    if (pattern.properties.length === 0) {
+      return identifiers;
+    }
+    pattern.properties.forEach((property) => {
+      if (property.type === "Property") {
+        const value = property.value || property.key;
+        if (value.type === "Identifier") {
+          identifiers.push(value);
+        } else {
+          identifiers.push(...extractIdentifiersFromPattern(value));
+        }
+      }
+    });
+  }
+  if (pattern.type === "MemberExpression" && pattern.property.type === "FunctionExpression") {
+    if (pattern.property.id == null) {
+      return identifiers;
+    }
+    identifiers.push(pattern.property.id);
+  }
+  return identifiers;
+}
+
+function extractIdentifiersFromPatterns(patterns: Exclude<ESTree.Pattern, "Identifier">[]): ESTree.Identifier[] {
+  if (patterns.length === 0) {
+    return [];
+  }
+  const identifiers: ESTree.Identifier[] = [];
+  patterns.forEach((pattern) => {
+    identifiers.push(...extractIdentifiersFromPattern(pattern));
+  });
+  return identifiers;
+}
 
 function exportPrivateFixer<T>(
   fixer: Rule.RuleFixer,
@@ -15,7 +67,7 @@ function exportPrivateFixer<T>(
     identifier?: ESTree.Identifier;
   },
 ): Rule.Fix {
-  // conditions about export code blocks
+  // ---- NOTE: conditions about export code blocks ----
   if (!hint?.declaration) {
     // only remove token
     if (targetNode.type === "ExportNamedDeclaration" && hint.identifier !== undefined) {
@@ -27,7 +79,7 @@ function exportPrivateFixer<T>(
   if (!hint.declaration.range) {
     return { range: [0, 0], text: "" };
   }
-  // conditions about export + function | class | variables
+  // ---- NOTE: conditions about export + function | class | variables ----
   const parentNode = targetNode.parent;
   if (targetNode.type === "ExportNamedDeclaration" && targetNode.range !== undefined) {
     if (parentNode.type === "Program" && parentNode.sourceType === "module") {
@@ -58,7 +110,7 @@ const exportPrivateRule: Rule.RuleModule = {
       type: string;
     }[] = [];
     // NOTE: variables for hoisting export declarers
-    const calledDeclarationIdentifiers: (ESTree.Identifier | ESTree.Identifier[])[] = [];
+    const calledDeclarationIdentifiers: ESTree.Identifier[] = [];
     const stillNotExportIdentifiers: ESTree.Identifier[] = [];
 
     return {
@@ -80,9 +132,18 @@ const exportPrivateRule: Rule.RuleModule = {
 
         const identifiers = declaration.declarations
           .map((s) => (s.id && s.type === "VariableDeclarator" ? s.id : undefined))
-          .filter((s): s is ESTree.Identifier => s !== undefined);
+          .filter((s): s is ESTree.Identifier => s !== undefined && s.type === "Identifier");
 
-        // TODO: consider to pattern without Identifier
+        const otherPatterns =
+          identifiers.length !== declaration.declarations.length
+            ? declaration.declarations
+                .map((s) => (s.id && s.type === "VariableDeclarator" ? s.id : undefined))
+                .filter((s): s is Exclude<ESTree.Pattern, "Identifier"> => s !== undefined && s.type !== "Identifier")
+            : [];
+
+        const parsedIdentifiersFromPatterns = extractIdentifiersFromPatterns(otherPatterns);
+
+        identifiers.push(...parsedIdentifiersFromPatterns);
         if (!hasPrivateAnnotatedComment || parentDeclaration.range === undefined || identifiers.length === 0) {
           return;
         }
@@ -95,27 +156,24 @@ const exportPrivateRule: Rule.RuleModule = {
           parentBegin: parentDeclaration.range[0],
           parentEnd: parentDeclaration.range[1],
           names: identifierNames,
-          type: "variables",
+          type: 1 < identifierNames.length ? "variables" : "variable",
         });
 
-        const tmpReplacer = (a: string, b: string) => (a < b ? 1 : -1);
         // NOTE: for hoisting export declarers
-        const alreadyExportedIdentifier = calledDeclarationIdentifiers.find(
-          (s) => Array.isArray(s) && JSON.stringify(s, tmpReplacer) === JSON.stringify(identifierNames, tmpReplacer),
-        );
-        if (alreadyExportedIdentifier !== undefined && Array.isArray(alreadyExportedIdentifier)) {
-          const foundIdentifier = stillNotExportIdentifiers.find((s) =>
-            alreadyExportedIdentifier.some((t) => t.name === s.name),
-          );
-          if (foundIdentifier?.loc == undefined || foundIdentifier?.name == undefined) {
-            return;
-          }
-          context.report({
-            loc: foundIdentifier.loc,
-            message: `private variables ${foundIdentifier?.name} cannot export`,
-          });
+        if (identifierNames.some((s) => stillNotExportIdentifiers.some(t => t.name === s))) {
+          stillNotExportIdentifiers
+            .filter((s) => identifierNames.includes(s.name))
+            .forEach((s) => {
+              if (s.loc == null) {
+                return;
+              }
+              context.report({
+                loc: s.loc,
+                message: `variable ${s.name} must be private`,
+              });
+            });
         } else {
-          calledDeclarationIdentifiers.push(identifiers);
+          calledDeclarationIdentifiers.push(...identifiers);
         }
       },
       ClassDeclaration(declaration) {
@@ -159,7 +217,7 @@ const exportPrivateRule: Rule.RuleModule = {
           }
           context.report({
             loc: foundIdentifier.loc,
-            message: `private class ${foundIdentifier?.name} cannot export`,
+            message: `class ${foundIdentifier?.name} must be private.`,
           });
         } else {
           calledDeclarationIdentifiers.push(declaration.id);
@@ -206,7 +264,7 @@ const exportPrivateRule: Rule.RuleModule = {
           }
           context.report({
             loc: foundIdentifier.loc,
-            message: `private function ${foundIdentifier?.name} cannot export`,
+            message: `function ${foundIdentifier?.name} must be private.`,
           });
         } else {
           calledDeclarationIdentifiers.push(declaration.id);
@@ -218,7 +276,7 @@ const exportPrivateRule: Rule.RuleModule = {
           return;
         }
         const declaration = node.declaration;
-        // conditions about export + function | class | variables
+        // --- NOTE: conditions about export + function | class | variables ---
         if (declaration != null) {
           if (parentNode?.parent != null || parentNode.type !== "Program" || !parentNode.comments?.length) {
             return;
@@ -243,7 +301,7 @@ const exportPrivateRule: Rule.RuleModule = {
           if (declaration.type === "FunctionDeclaration") {
             context.report({
               loc: declaration.loc,
-              message: `private function ${declaration.id.name} cannot export`,
+              message: `function ${declaration.id.name} must be private`,
               fix: (fixer) =>
                 exportPrivateFixer<typeof declaration.type>(fixer, node, {
                   declaration,
@@ -252,7 +310,7 @@ const exportPrivateRule: Rule.RuleModule = {
           } else if (declaration.type === "ClassDeclaration") {
             context.report({
               loc: declaration.loc,
-              message: `private class ${declaration.id.name} cannot export`,
+              message: `class ${declaration.id.name} must be private`,
               fix: (fixer) =>
                 exportPrivateFixer<typeof declaration.type>(fixer, node, {
                   declaration,
@@ -262,15 +320,29 @@ const exportPrivateRule: Rule.RuleModule = {
           if (declaration.type !== "VariableDeclaration") {
             return;
           }
+
           const variableIdentifiers = declaration.declarations
-            .map((s) => (s.id.type === "Identifier" ? s.id : undefined))
-            .filter((s) => s !== undefined);
-          // TODO: consider to pattern without Identifier
+            .map((s) => (s.id && s.type === "VariableDeclarator" ? s.id : undefined))
+            .filter((s): s is ESTree.Identifier => s !== undefined && s.type === "Identifier");
+
+          const otherPatterns =
+            variableIdentifiers.length !== declaration.declarations.length
+              ? declaration.declarations
+                  .map((s) => (s.id && s.type === "VariableDeclarator" ? s.id : undefined))
+                  .filter((s): s is Exclude<ESTree.Pattern, "Identifier"> => s !== undefined && s.type !== "Identifier")
+              : [];
+
+          const parsedIdentifiersFromPatterns = extractIdentifiersFromPatterns([...otherPatterns]);
+
+          variableIdentifiers.push(...parsedIdentifiersFromPatterns);
+
           context.report({
             loc: declaration.loc,
-            message: `private variables ${
-              variableIdentifiers.length === 1 ? variableIdentifiers.map((id) => id.name).toString() + " " : ""
-            }cannot export`,
+            message: `${
+              1 < variableIdentifiers.length
+                ? `variables ${variableIdentifiers.map((id) => id.name).toString()}`
+                : `variable ${variableIdentifiers.map((id) => id.name).toString()}`
+            } must be private`,
             fix: (fixer) =>
               exportPrivateFixer<typeof declaration.type>(fixer, node, {
                 declaration,
@@ -278,10 +350,12 @@ const exportPrivateRule: Rule.RuleModule = {
           });
           return;
         }
-        // conditions about export blocks
+
+        // ---- NOTE: conditions about export blocks ----
         if (node.specifiers.length === 0) {
           return;
         }
+
         const mappedIdentifiers = node.specifiers
           .map((s) => {
             if (!!s.exported && s.exported.type === "Identifier") {
@@ -289,16 +363,23 @@ const exportPrivateRule: Rule.RuleModule = {
             }
             return undefined;
           })
-          .filter((s): s is ESTree.Identifier => s !== undefined);
+          .filter((s): s is ESTree.Identifier => s !== undefined && s.type === "Identifier");
 
-        // NOTE: for hoisting export declarers
-        const calledIdentifiersFlat = calledDeclarationIdentifiers.flat();
-        if (!mappedIdentifiers.every((s) => calledIdentifiersFlat.some((v) => v.name === s.name))) {
-          const stillNotDeclareIdentifiers = mappedIdentifiers.filter(
-            (s) => !calledIdentifiersFlat.some((t) => t.name === s.name),
-          );
-          stillNotExportIdentifiers.push(...stillNotDeclareIdentifiers);
-        }
+        // ---- NOTE: for hoisting export declarers ----
+        const stillNotDeclareIdentifiers = mappedIdentifiers.filter(
+          (s) => !calledDeclarationIdentifiers.some((t) => t.name === s.name),
+        );
+        // deleted stillNotExportIdentifiers' values from matched exportedAndDeclaredIdentifiers
+        const exportedAndDeclaredIdentifiers = mappedIdentifiers.filter((s) =>
+          stillNotDeclareIdentifiers.some((t) => s.name === t.name),
+        );
+        const tmpArray = structuredClone(stillNotExportIdentifiers);
+        stillNotExportIdentifiers.length = 0;
+        stillNotExportIdentifiers.push(
+          ...tmpArray.filter((s) => exportedAndDeclaredIdentifiers.some((t) => t.name === s.name)),
+          ...stillNotDeclareIdentifiers,
+        );
+        // --------
 
         const findIdentifiers = mappedIdentifiers.filter((s) =>
           restrictedExportsInfo.some(
@@ -320,14 +401,12 @@ const exportPrivateRule: Rule.RuleModule = {
         findIdentifiers.forEach((identifier, index) => {
           const names = sortedFindData[index]?.names;
           const type = sortedFindData[index]?.type;
-          if (identifier?.loc == null || names === undefined || type === undefined) {
+          if (identifier?.loc == null || !names?.length || type === undefined) {
             return;
           }
           context.report({
             loc: identifier.loc,
-            message: `private ${sortedFindData[index]?.type} ${
-              names.length === 1 ? names.map((name) => name).toString() + " " : ""
-            }cannot export`,
+            message: `${sortedFindData[index]?.type} ${names.toString()} must be private.`,
             fix: (fixer) =>
               exportPrivateFixer<typeof type>(fixer, node, {
                 identifier,
