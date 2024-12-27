@@ -1,7 +1,7 @@
 import type { Rule } from "eslint";
 import type * as ESTree from "estree";
 
-function exportRestrictFixer<T>(
+function exportPrivateFixer<T>(
   fixer: Rule.RuleFixer,
   targetNode: Rule.Node,
   hint: {
@@ -41,7 +41,7 @@ function exportRestrictFixer<T>(
   return { range: [0, 0], text: "" };
 }
 
-const exportRestrictRule: Rule.RuleModule = {
+const exportPrivateRule: Rule.RuleModule = {
   meta: {
     type: "problem",
     docs: {
@@ -245,7 +245,7 @@ const exportRestrictRule: Rule.RuleModule = {
               loc: declaration.loc,
               message: `private function ${declaration.id.name} cannot export`,
               fix: (fixer) =>
-                exportRestrictFixer<typeof declaration.type>(fixer, node, {
+                exportPrivateFixer<typeof declaration.type>(fixer, node, {
                   declaration,
                 }),
             });
@@ -254,7 +254,7 @@ const exportRestrictRule: Rule.RuleModule = {
               loc: declaration.loc,
               message: `private class ${declaration.id.name} cannot export`,
               fix: (fixer) =>
-                exportRestrictFixer<typeof declaration.type>(fixer, node, {
+                exportPrivateFixer<typeof declaration.type>(fixer, node, {
                   declaration,
                 }),
             });
@@ -272,7 +272,7 @@ const exportRestrictRule: Rule.RuleModule = {
               variableIdentifiers.length === 1 ? variableIdentifiers.map((id) => id.name).toString() + " " : ""
             }cannot export`,
             fix: (fixer) =>
-              exportRestrictFixer<typeof declaration.type>(fixer, node, {
+              exportPrivateFixer<typeof declaration.type>(fixer, node, {
                 declaration,
               }),
           });
@@ -329,7 +329,7 @@ const exportRestrictRule: Rule.RuleModule = {
               names.length === 1 ? names.map((name) => name).toString() + " " : ""
             }cannot export`,
             fix: (fixer) =>
-              exportRestrictFixer<typeof type>(fixer, node, {
+              exportPrivateFixer<typeof type>(fixer, node, {
                 identifier,
               }),
           });
@@ -339,4 +339,4 @@ const exportRestrictRule: Rule.RuleModule = {
   },
 };
 
-export { exportRestrictRule };
+export { exportPrivateRule };
