@@ -160,7 +160,7 @@ const exportPrivateRule: Rule.RuleModule = {
         });
 
         // NOTE: for hoisting export declarers
-        if (identifierNames.some((s) => stillNotExportIdentifiers.some(t => t.name === s))) {
+        if (identifierNames.some((s) => stillNotExportIdentifiers.some((t) => t.name === s))) {
           stillNotExportIdentifiers
             .filter((s) => identifierNames.includes(s.name))
             .forEach((s) => {
