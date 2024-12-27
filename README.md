@@ -6,7 +6,7 @@ It will be help to manage export declarations for private functions, classes, an
 
 ## Motivation
 In TypeScript and JavaScript, when declarers is defined in a file, it is not possible to manage strictly as a private functions, classes, and variables.  
-Using `eslint-plugin-export-restrict`, you can protect by writing `@private` as a comment like JSDoc and TSDoc, and is able to solve those problems.  
+Using `eslint-plugin-export-restrict`, you can protect by writing `@private` as a comment like JSDoc and TSDoc, and solve those problems.  
 
 ## Installation
 - npm
@@ -25,6 +25,7 @@ Depending on how you configure ESLint, use either Flat Config or eslintrc to con
 
 ```js
 import exportRestrictPlugin from "eslint-plugin-export-restrict";
+// const exportRestrictPlugin = require("eslint-plugin-export-restrict");
 
 export default [
   // other settings...
@@ -32,8 +33,6 @@ export default [
     plugins: {
       "export-restrict": exportRestrictPlugin,
     },
-  },
-  {
     rules: {
       "export-restrict/no-export-private-declare": ["error"],
     },
