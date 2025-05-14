@@ -270,13 +270,109 @@ const exportPrivateRule: Rule.RuleModule = {
           calledDeclarationIdentifiers.push(declaration.id);
         }
       },
+      TSTypeAliasDeclaration(declaration) {
+        const parentDeclaration = declaration.parent;
+        if (
+          parentDeclaration.parent !== null ||
+          parentDeclaration.type !== "Program" ||
+          !parentDeclaration.comments?.length
+        ) {
+          return;
+        }
+        const hasPrivateAnnotatedComment = parentDeclaration.comments.some(
+          // @ts-ignore
+          (s) =>
+            s.value.includes("@private") &&
+            s.range?.[1] !== undefined &&
+            s.range?.[1] === (declaration.range?.[0] || 0) - 1,
+        );
+
+        if (!hasPrivateAnnotatedComment || parentDeclaration.range === undefined || declaration.id.name === undefined) {
+          return;
+        }
+        if (parentDeclaration.range?.[0] === undefined || parentDeclaration.range?.[1] === undefined) {
+          return;
+        }
+
+        restrictedExportsInfo.push({
+          parentBegin: parentDeclaration.range[0],
+          parentEnd: parentDeclaration.range[1],
+          names: [declaration.id.name],
+          type: "type",
+        });
+
+        // NOTE: for hoisting export declarers
+        const alreadyExportedIdentifier = stillNotExportIdentifiers.find(
+          (s) => !Array.isArray(s) && s.name === declaration.id.name,
+        );
+        if (alreadyExportedIdentifier !== undefined) {
+          const foundIdentifier = stillNotExportIdentifiers.find((s) => s.name === declaration.id.name);
+          if (foundIdentifier?.loc == undefined || foundIdentifier?.name == undefined) {
+            return;
+          }
+          context.report({
+            loc: foundIdentifier.loc,
+            message: `type ${foundIdentifier?.name} must be private.`,
+          });
+        } else {
+          calledDeclarationIdentifiers.push(declaration.id);
+        }
+      },
+      TSInterfaceDeclaration(declaration) {
+        const parentDeclaration = declaration.parent;
+        if (
+          parentDeclaration.parent !== null ||
+          parentDeclaration.type !== "Program" ||
+          !parentDeclaration.comments?.length
+        ) {
+          return;
+        }
+        const hasPrivateAnnotatedComment = parentDeclaration.comments.some(
+          // @ts-ignore
+          (s) =>
+            s.value.includes("@private") &&
+            s.range?.[1] !== undefined &&
+            s.range?.[1] === (declaration.range?.[0] || 0) - 1,
+        );
+
+        if (!hasPrivateAnnotatedComment || parentDeclaration.range === undefined || declaration.id.name === undefined) {
+          return;
+        }
+        if (parentDeclaration.range?.[0] === undefined || parentDeclaration.range?.[1] === undefined) {
+          return;
+        }
+
+        restrictedExportsInfo.push({
+          parentBegin: parentDeclaration.range[0],
+          parentEnd: parentDeclaration.range[1],
+          names: [declaration.id.name],
+          type: "interface",
+        });
+
+        // NOTE: for hoisting export declarers
+        const alreadyExportedIdentifier = stillNotExportIdentifiers.find(
+          (s) => !Array.isArray(s) && s.name === declaration.id.name,
+        );
+        if (alreadyExportedIdentifier !== undefined) {
+          const foundIdentifier = stillNotExportIdentifiers.find((s) => s.name === declaration.id.name);
+          if (foundIdentifier?.loc == undefined || foundIdentifier?.name == undefined) {
+            return;
+          }
+          context.report({
+            loc: foundIdentifier.loc,
+            message: `interface ${foundIdentifier?.name} must be private.`,
+          });
+        } else {
+          calledDeclarationIdentifiers.push(declaration.id);
+        }
+      },
       ExportNamedDeclaration(node) {
         const parentNode = node.parent;
         if (parentNode.parent != null) {
           return;
         }
         const declaration = node.declaration;
-        // --- NOTE: conditions about export + function | class | variables ---
+        // --- NOTE: conditions about export + function | class | variables | type | interface ---
         if (declaration != null) {
           if (parentNode?.parent != null || parentNode.type !== "Program" || !parentNode.comments?.length) {
             return;
@@ -312,6 +408,32 @@ const exportPrivateRule: Rule.RuleModule = {
               loc: declaration.loc,
               message: `class ${declaration.id.name} must be private`,
               fix: (fixer) =>
+                exportPrivateFixer<typeof declaration.type>(fixer, node, {
+                  declaration,
+                }),
+            });
+            // @ts-ignore
+          } else if (declaration.type === "TSInterfaceDeclaration") {
+            context.report({
+              // @ts-ignore
+              loc: declaration.loc,
+              // @ts-ignore
+              message: `interface ${declaration.id.name} must be private`,
+              fix: (fixer) =>
+                // @ts-ignore
+                exportPrivateFixer<typeof declaration.type>(fixer, node, {
+                  declaration,
+                }),
+            });
+            // @ts-ignore
+          } else if (declaration.type === "TSTypeAliasDeclaration") {
+            context.report({
+              // @ts-ignore
+              loc: declaration.loc,
+              // @ts-ignore
+              message: `type ${declaration.id.name} must be private`,
+              fix: (fixer) =>
+                // @ts-ignore
                 exportPrivateFixer<typeof declaration.type>(fixer, node, {
                   declaration,
                 }),
