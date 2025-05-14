@@ -1,4 +1,5 @@
-import exportRestrictPlugin from 'eslint-plugin-export-restrict';
+import exportRestrictPlugin from '../dist/esm/index.mjs';
+import typescriptESLintParser from '@typescript-eslint/parser';
 
 export default [
   {
@@ -8,6 +9,9 @@ export default [
     },
     rules: {
       'export-restrict/no-export-private-declare': ['error'],
+    },
+    languageOptions: {
+      parser: typescriptESLintParser,
     },
   },
 ];

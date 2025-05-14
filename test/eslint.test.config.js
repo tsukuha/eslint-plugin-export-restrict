@@ -1,4 +1,5 @@
 const exportRestrictPlugin = require('eslint-plugin-export-restrict');
+const typescriptESLintParser = require('@typescript-eslint/parser');
 
 module.exports = [
   {
@@ -8,6 +9,9 @@ module.exports = [
     },
     rules: {
       'export-restrict/no-export-private-declare': ['error'],
+    },
+    languageOptions: {
+      parser: typescriptESLintParser,
     },
   },
 ];
