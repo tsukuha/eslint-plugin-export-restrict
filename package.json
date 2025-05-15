@@ -1,22 +1,36 @@
 {
   "name": "eslint-plugin-export-restrict",
   "version": "0.3.0-beta",
+  "description": "ESLint Plugin For Restricted Export",
+  "type": "module",
+  "packageManager": "pnpm@9.1.0",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.cts",
+        "default": "./dist/cjs/index.cjs"
+      }
+    }
+  },
   "files": [
     "dist",
     "src"
   ],
-  "packageManager": "pnpm@9.1.0",
-  "main": "dist/cjs/index.cjs",
-  "module": "dist/esm/index.mjs",
-  "types": "dist/esm/index.d.mts",
-  "description": "ESLint Plugin For Restricted Export",
   "scripts": {
-    "build": "tsc -p ./src/tsconfig.json",
+    "build": "pnpm run check && tsdown",
+    "check": "tsc --noEmit",
     "lint": "prettier --check ./src && eslint -c ./eslint.config.js",
     "lint:fix": "prettier --write ./src && eslint -c ./eslint.config.js --fix",
-    "test": "eslint -c ./test/eslint.test.eslintrc.js",
-    "test:flat": "eslint -c ./test/eslint.test.config.js",
-    "test:esm": "ESLINT_USE_FLAT_CONFIG=true eslint -c ./test/eslint.test.config.mjs"
+    "test": "pnpm run lint && pnpm run test:esm && pnpm run test:cjs && pnpm run test:legacy",
+    "test:esm": "eslint -c ./test/eslint.test.config.js .",
+    "test:cjs": "eslint -c ./test/eslint.test.config.cjs .",
+    "test:legacy": "ESLINT_USE_FLAT_CONFIG=false eslint -c ./test/eslint.test.eslintrc.cjs ."
   },
   "repository": {
     "type": "git",
@@ -38,6 +52,7 @@
     "eslint": "^9.26.0",
     "eslint-plugin-export-restrict": "link:",
     "prettier": "^3.5.3",
+    "tsdown": "^0.11.9",
     "typescript": "^5.8.3"
   }
 }

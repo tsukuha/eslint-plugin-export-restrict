@@ -1,4 +1,4 @@
-import { exportPrivateRule } from "./rules/exportPrivateDeclareRule.mjs";
+import { exportPrivateRule } from "./rules/exportPrivateDeclareRule";
 
 export default {
   rules: { "no-export-private-declare": exportPrivateRule },

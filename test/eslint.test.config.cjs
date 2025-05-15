@@ -1,7 +1,7 @@
-import exportRestrictPlugin from "../dist/esm/index.js";
-import typescriptESLintParser from "@typescript-eslint/parser";
+const exportRestrictPlugin = require("../dist/cjs/index.cjs");
+const typescriptESLintParser = require("@typescript-eslint/parser");
 
-export default [
+module.exports = [
   {
     files: ["**/*.js", "**/*.ts"],
     plugins: {
