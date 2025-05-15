@@ -19,6 +19,7 @@ jobs:
           npm i -g pnpm@9.1.0
           pnpm i
           pnpm lint
+          pnpm fmt:check
       - name: ESLint Tests
         run: |
           pnpm build
