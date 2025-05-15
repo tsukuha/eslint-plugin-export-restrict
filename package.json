@@ -25,6 +25,8 @@
   "scripts": {
     "build": "pnpm run check && tsdown",
     "check": "tsc --noEmit",
+    "fmt": "prettier . --write",
+    "fmt:check": "prettier . --check",
     "lint": "prettier --check ./src && eslint -c ./eslint.config.js",
     "lint:fix": "prettier --write ./src && eslint -c ./eslint.config.js --fix",
     "test": "pnpm run lint && pnpm run test:esm && pnpm run test:cjs && pnpm run test:legacy",

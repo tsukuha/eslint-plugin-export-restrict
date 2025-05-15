@@ -7,6 +7,6 @@
     "target": "ESNext",
     "noErrorTruncation": true,
     "skipLibCheck": true,
-    "moduleResolution": "node",
+    "moduleResolution": "node"
   }
 }
