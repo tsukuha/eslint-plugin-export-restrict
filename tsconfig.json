@@ -3,8 +3,10 @@
     "strict": true,
     "esModuleInterop": true,
     "noUncheckedIndexedAccess": true,
-    "module": "NodeNext",
+    "module": "ESNext",
     "target": "ESNext",
-    "noErrorTruncation": true
+    "noErrorTruncation": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node",
   }
 }

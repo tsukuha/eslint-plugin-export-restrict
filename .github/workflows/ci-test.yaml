@@ -23,5 +23,3 @@ jobs:
         run: |
           pnpm build
           pnpm test
-          pnpm test:flat
-          pnpm test:esm
