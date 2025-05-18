@@ -29,9 +29,10 @@
     "fmt:check": "prettier . --check",
     "lint": "prettier --check ./src && eslint -c ./eslint.config.js",
     "lint:fix": "prettier --write ./src && eslint -c ./eslint.config.js --fix",
-    "test": "pnpm run lint && pnpm run test:esm && pnpm run test:cjs && pnpm run test:legacy",
+    "test": "pnpm run lint && pnpm run test:esm && pnpm run test:cjs && pnpm run test:legacy && pnpm run test:vue",
     "test:esm": "eslint -c ./test/eslint.test.config.js .",
     "test:cjs": "eslint -c ./test/eslint.test.config.cjs .",
+    "test:vue": "eslint -c ./test/eslint-plugin-vue.test.config.js .",
     "test:legacy": "ESLINT_USE_FLAT_CONFIG=false eslint -c ./test/eslint.test.eslintrc.cjs ."
   },
   "repository": {
@@ -55,6 +56,7 @@
     "eslint-plugin-export-restrict": "link:",
     "prettier": "^3.5.3",
     "tsdown": "^0.11.9",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vue-eslint-parser": "^10.1.3"
   }
 }
