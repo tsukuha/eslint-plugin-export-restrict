@@ -1,10 +1,3 @@
----
-layout: default
-title: eslint-plugin-export-restrict
-description: This package `eslint-plugin-export-restrict` is a custom plugin using ESLint for controlling export declarations from files. It will be help to manage export declarations for private functions, classes, and variables in source code to manage developing.
-keywords: eslint-plugin, eslint-plugin-export, eslint-plugin-export-restrict, eslint-no-export, eslint-export-restrict
----
-
 # [eslint-plugin-export-restrict](https://github.com/tsukuha/eslint-plugin-export-restrict)
 
 ## About
