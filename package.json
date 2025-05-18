@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-export-restrict",
-  "version": "0.3.0-beta",
+  "version": "0.3.1-beta",
   "description": "ESLint Plugin For Restricted Export",
   "type": "module",
   "packageManager": "pnpm@9.1.0",
@@ -42,7 +42,8 @@
   "keywords": [
     "eslint",
     "eslint-plugin",
-    "eslint-plugin-export-restrict"
+    "eslint-plugin-export-restrict",
+    "export-restrict"
   ],
   "author": "tsukuha（karacoro / からころ） <tsukuha0727@gmail.com>",
   "license": "MIT",
