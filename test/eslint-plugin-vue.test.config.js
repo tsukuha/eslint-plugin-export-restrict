@@ -1,6 +1,6 @@
 import exportRestrictPlugin from "../dist/esm/index.js";
 import typescriptESLintParser from "@typescript-eslint/parser";
-import vueEslintParser from 'vue-eslint-parser';
+import vueEslintParser from "vue-eslint-parser";
 
 export default [
   {
@@ -15,7 +15,7 @@ export default [
       parser: vueEslintParser,
       parserOptions: {
         parser: typescriptESLintParser,
-        extraFileExtensions: ['.vue'],
+        extraFileExtensions: [".vue"],
       },
     },
   },
